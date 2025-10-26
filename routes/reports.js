@@ -5,7 +5,7 @@ const {
   getAnalytics,
   exportReport
 } = require('../Controllers/reportController');
-const { protect } = require('../Middleware/Auth');
+const { protect } = require('../Middleware/auth');
 
 const router = express.Router();
 
