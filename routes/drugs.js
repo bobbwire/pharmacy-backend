@@ -11,8 +11,8 @@ const {
   getNearExpiryDrugs,
   getDrugStatistics
 } = require('../Controllers/drugController');
-const { protect } = require('../middleware/Auth');
-const { handleValidationErrors } = require('../middleware/validation');
+const { protect } = require('../Middleware/Auth');
+const { handleValidationErrors } = require('../Middleware/validation');
 
 const router = express.Router();
 
