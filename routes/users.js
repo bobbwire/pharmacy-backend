@@ -6,8 +6,8 @@ const {
   changePassword, 
   updatePreferences 
 } = require('../Controllers/userController');
-const { protect } = require('../middleware/Auth');
-const { handleValidationErrors } = require('../middleware/validation');
+const { protect } = require('../Middleware/auth.js');
+const { handleValidationErrors } = require('../Middleware/validation');
 
 const router = express.Router();
 
