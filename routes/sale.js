@@ -1,7 +1,7 @@
 const express = require('express');
 const Sale = require('../models/Sale');
 const Drug = require('../models/Drug');
-const { protect } = require('../Middleware/Auth');
+const { protect } = require('../Middleware/auth');
 
 const router = express.Router();
 
