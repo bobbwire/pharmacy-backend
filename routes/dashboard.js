@@ -4,7 +4,7 @@ const {
   getInventoryOverview,
   getSalesAnalytics
 } = require('../Controllers/dashboardController');
-const { protect } = require('../Middleware/Auth');
+const { protect } = require('../Middleware/auth');
 
 const router = express.Router();
 
