@@ -12,24 +12,27 @@ const app = express();
 // ✅ CORS Configuration
 // ------------------------------
 const allowedOrigins = [
-  'https://pharmacy-pi-jade.vercel.app', // ✅ Frontend (Vercel)
-  'http://localhost:3000'                // ✅ Local development
+  'https://pharmacy-pi-jade.vercel.app', // Frontend (Vercel)
+  'http://localhost:3000'                // Local development
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow Postman or mobile
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // allow Postman / curl / mobile
     if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
+      callback(null, true);
     } else {
       console.warn(`❌ Blocked by CORS: ${origin}`);
-      return callback(new Error('CORS policy: Origin not allowed'), false);
+      callback(new Error('CORS policy: Origin not allowed'), false);
     }
   },
   credentials: true,
 }));
 
-app.use(express.json());
+// ------------------------------
+// ✅ Middleware
+// ------------------------------
+app.use(express.json({ limit: '10mb' })); // handle large payloads
 
 // ------------------------------
 // ✅ Database Connection
@@ -39,7 +42,10 @@ mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 })
 .then(() => console.log('✅ MongoDB connected successfully'))
-.catch(err => console.error('❌ MongoDB connection error:', err.message));
+.catch(err => {
+  console.error('❌ MongoDB connection error:', err.message);
+  process.exit(1);
+});
 
 // ------------------------------
 // ✅ Routes
@@ -47,19 +53,20 @@ mongoose.connect(process.env.MONGODB_URI, {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/drugs', require('./routes/drugs'));
-app.use('/api/sales', require('./routes/sale')); // corrected plural path
+app.use('/api/sales', require('./routes/sale')); // plural path
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/reports', require('./routes/reports'));
 
 // ------------------------------
-// ✅ Basic Health Check Route
+// ✅ Health Check Route
 // ------------------------------
 app.get('/', (req, res) => {
   res.status(200).json({
     message: '✅ Pharmacy Management System API running successfully',
     backend: 'https://pharmacy-backend-qrb8.onrender.com',
     frontend: 'https://pharmacy-pi-jade.vercel.app',
-    status: 'online'
+    status: 'online',
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -67,16 +74,16 @@ app.get('/', (req, res) => {
 // ✅ Global Error Handler
 // ------------------------------
 app.use((err, req, res, next) => {
-  console.error('Error:', err.stack || err.message);
+  console.error('⚠️ Error:', err.message || err.stack);
   res.status(500).json({
-    message: '⚠️ Internal server error. Please try again later.'
+    message: err.message || 'Internal server error. Please try again later.',
   });
 });
 
 // ------------------------------
-// ✅ Server Listen (Render)
+// ✅ Start Server (Render)
 // ------------------------------
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
