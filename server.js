@@ -9,7 +9,7 @@ const cors = require('cors');
 const app = express();
 
 // ------------------------------
-// ✅ CORS Configuration
+// ✅ Enhanced CORS Configuration
 // ------------------------------
 const allowedOrigins = [
   'https://pharmacy-pi-jade.vercel.app', // Frontend (Vercel)
@@ -20,13 +20,14 @@ const allowedOrigins = [
   'http://127.0.0.1:5173'                // Localhost alternative
 ];
 
+// Enhanced CORS configuration
 app.use(cors({
-  origin: (origin, callback) => {
+  origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
     // Check if origin is in allowed list
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       console.log(`✅ Allowed CORS for: ${origin}`);
       callback(null, true);
     } else {
@@ -37,10 +38,10 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 
-// Handle preflight requests
+// Explicitly handle OPTIONS requests for all routes
 app.options('*', cors());
 
 // ------------------------------
@@ -97,7 +98,21 @@ app.get('/api/health', (req, res) => {
     status: 'healthy',
     message: 'Pharmacy Backend API is running',
     timestamp: new Date().toISOString(),
-    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    cors: {
+      enabled: true,
+      allowedOrigins: allowedOrigins.length
+    }
+  });
+});
+
+// Test CORS endpoint
+app.get('/api/cors-test', (req, res) => {
+  res.status(200).json({
+    message: 'CORS test successful!',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString(),
+    cors: 'Working correctly'
   });
 });
 
@@ -122,7 +137,8 @@ app.use((err, req, res, next) => {
   if (err.message.includes('CORS')) {
     return res.status(403).json({
       message: err.message,
-      allowedOrigins: allowedOrigins
+      allowedOrigins: allowedOrigins,
+      yourOrigin: req.headers.origin
     });
   }
   
@@ -163,4 +179,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌐 Allowed CORS origins:`);
   allowedOrigins.forEach(origin => console.log(`   - ${origin}`));
   console.log(`📊 Health check: https://pharmacy-backend-qrb8.onrender.com/api/health`);
+  console.log(`🔧 CORS test: https://pharmacy-backend-qrb8.onrender.com/api/cors-test`);
 });
